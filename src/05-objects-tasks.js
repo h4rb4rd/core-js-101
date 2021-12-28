@@ -19,8 +19,10 @@
  *    console.log(r.height);      // => 20
  *    console.log(r.getArea());   // => 200
  */
-function Rectangle(/* width, height */) {
-  throw new Error('Not implemented');
+function Rectangle(width, height) {
+  this.width = width;
+  this.height = height;
+  this.getArea = () => this.width * this.height;
 }
 
 /**
@@ -33,8 +35,8 @@ function Rectangle(/* width, height */) {
  *    [1,2,3]   =>  '[1,2,3]'
  *    { width: 10, height : 20 } => '{"height":10,"width":20}'
  */
-function getJSON(/* obj */) {
-  throw new Error('Not implemented');
+function getJSON(obj) {
+  return JSON.stringify(obj);
 }
 
 /**
@@ -48,8 +50,8 @@ function getJSON(/* obj */) {
  *    const r = fromJSON(Circle.prototype, '{"radius":10}');
  *
  */
-function fromJSON(/* proto, json */) {
-  throw new Error('Not implemented');
+function fromJSON(proto, json) {
+  return Object.assign(Object.create(proto), JSON.parse(json));
 }
 
 /**
@@ -107,32 +109,154 @@ function fromJSON(/* proto, json */) {
  */
 
 const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
+  error:
+    'Element, id and pseudo-element should not occur more then one time inside the selector',
+
+  orderError:
+    'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element',
+
+  element(value) {
+    if (this.elementValue) {
+      throw new Error(this.error);
+    }
+
+    if (this.idValue) {
+      throw new Error(this.orderError);
+    }
+
+    const obj = { ...this };
+
+    if (!obj.elementValue) {
+      obj.elementValue = value;
+    } else {
+      obj.elementValue += value;
+    }
+
+    return obj;
   },
 
-  id(/* value */) {
-    throw new Error('Not implemented');
+  id(value) {
+    if (this.idValue) {
+      throw new Error(this.error);
+    }
+
+    if (this.classValue || this.pseudoElementValue) {
+      throw new Error(this.orderError);
+    }
+
+    const obj = { ...this };
+
+    if (!obj.idValue) {
+      obj.idValue = `#${value}`;
+    } else {
+      obj.idValue += `#${value}`;
+    }
+
+    return obj;
   },
 
-  class(/* value */) {
-    throw new Error('Not implemented');
+  class(value) {
+    if (this.attrValue) {
+      throw new Error(this.orderError);
+    }
+    const obj = { ...this };
+
+    if (!obj.classValue) {
+      obj.classValue = `.${value}`;
+    } else {
+      obj.classValue += `.${value}`;
+    }
+
+    return obj;
   },
 
-  attr(/* value */) {
-    throw new Error('Not implemented');
+  attr(value) {
+    if (this.pseudoClassValue) {
+      throw new Error(this.orderError);
+    }
+
+    const obj = { ...this };
+
+    if (!obj.attrValue) {
+      obj.attrValue = `[${value}]`;
+    } else {
+      obj.attrValue += `[${value}]`;
+    }
+
+    return obj;
   },
 
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
+  pseudoClass(value) {
+    if (this.pseudoElementValue) {
+      throw new Error(this.orderError);
+    }
+
+    const obj = { ...this };
+
+    if (!obj.pseudoClassValue) {
+      obj.pseudoClassValue = `:${value}`;
+    } else {
+      obj.pseudoClassValue += `:${value}`;
+    }
+
+    return obj;
   },
 
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
+  pseudoElement(value) {
+    if (this.pseudoElementValue) {
+      throw new Error(this.error);
+    }
+
+    const obj = { ...this };
+
+    if (!obj.pseudoElementValue) {
+      obj.pseudoElementValue = `::${value}`;
+    } else {
+      obj.pseudoElementValue += `::${value}`;
+    }
+
+    return obj;
   },
 
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
+  combine(selector1, combinator, selector2) {
+    const obj = { ...this };
+
+    const value = `${selector1.stringify()} ${combinator} ${selector2.stringify()}`;
+
+    if (!obj.value) {
+      obj.value = value;
+    } else {
+      obj.value += value;
+    }
+
+    return obj;
+  },
+
+  stringify() {
+    if (this.value) return this.value;
+
+    let result = '';
+
+    if (this.elementValue) {
+      result += this.elementValue;
+    }
+    if (this.idValue) {
+      result += this.idValue;
+    }
+    if (this.classValue) {
+      result += this.classValue;
+    }
+    if (this.attrValue) {
+      result += this.attrValue;
+    }
+    if (this.pseudoClassValue) {
+      result += this.pseudoClassValue;
+    }
+    if (this.pseudoElementValue) {
+      result += this.pseudoElementValue;
+    }
+
+    return result;
   },
 };
 
